@@ -1,0 +1,7 @@
+name: gh-self-hosted
+channels:
+  - nodefaults
+  - conda-forge
+dependencies:
+  - python
+  - docker-compose
