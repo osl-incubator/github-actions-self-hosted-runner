@@ -8,13 +8,13 @@ services:
     env_file: .env
     deploy:
       mode: replicated
-      replicas: 4
+       replicas: ${DOCKER_REPLICAS}
       resources:
         limits:
-          cpus: '0.35'
-          memory: 1G
+          cpus: ${DOCKER_LIMITS_CPUS}
+          memory: ${DOCKER_LIMITS_MEMORY}
         reservations:
-          cpus: '0.25'
-          memory: 128M
+          cpus: ${DOCKER_RESERVATIONS_CPUS}
+          memory: ${DOCKER_RESERVATIONS_MEMORY}
 
 
