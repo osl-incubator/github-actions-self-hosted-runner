@@ -8,7 +8,7 @@ services:
     env_file: .env
     deploy:
       mode: replicated
-       replicas: ${DOCKER_REPLICAS}
+      replicas: ${DOCKER_REPLICAS}
       resources:
         limits:
           cpus: ${DOCKER_LIMITS_CPUS}
