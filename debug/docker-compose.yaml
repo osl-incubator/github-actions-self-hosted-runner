@@ -1,0 +1,12 @@
+version: "3.8"
+services:
+#   hello-world-2:
+#    hostname: hello-world-2
+#    image: nestybox/ubuntu-jammy-docker
+#    command: docker run --rm hello-world
+
+  hello-world-caller:
+    build:
+      dockerfile: Dockerfile
+      context: .
+

@@ -37,7 +37,6 @@ RUN apt update -y \
     /var/cache/apt/archives \
     /tmp/*
 
-ENV RUNNER_VERSION=2.306.0
 ENV USER_CI=ci
 
 RUN useradd -ms /bin/bash $USER_CI \
@@ -47,19 +46,6 @@ RUN useradd -ms /bin/bash $USER_CI \
   && echo "$USER_CI ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USER_CI \
   && chmod 0440 /etc/sudoers.d/$USER_CI
 
-RUN cd /home/$USER_CI/actions-runner \
-  && echo "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz" \
-  && curl -O -L "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz" \
-  && echo "b0a090336f0d0a439dac7505475a1fb822f61bbb36420c7b3b3fe6b1bdc4dbaa  actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz" | shasum -a 256 -c \
-  && tar xzf ./actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz
-
-RUN /home/$USER_CI/actions-runner/bin/installdependencies.sh
-
-COPY start.sh start.sh
-
-# make the script executable
-RUN chmod +x start.sh
-
 # since the config and run script for actions are not allowed to be run by root,
 # set the user to "docker" so all subsequent commands are run as the docker user
 USER $USER_CI
@@ -67,4 +53,4 @@ USER $USER_CI
 COPY --chown=$USER_CI:$USER_CI entrypoint.sh /tmp/entrypoint.sh
 
 ENTRYPOINT ["/tmp/entrypoint.sh"]
-CMD ["./start.sh"]
+CMD ["docker", "run", "--rm", "hello-world"]
