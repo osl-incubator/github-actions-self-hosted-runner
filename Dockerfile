@@ -37,7 +37,8 @@ RUN apt update -y \
     /var/cache/apt/archives \
     /tmp/*
 
-ENV RUNNER_VERSION=2.306.0
+ENV RUNNER_VERSION=2.307.1
+ENV RUNNER_SHA256=038c9e98b3912c5fd6d0b277f2e4266b2a10accc1ff8ff981b9971a8e76b5441
 ENV USER_CI=ci
 
 RUN useradd -ms /bin/bash $USER_CI \
@@ -50,10 +51,10 @@ RUN useradd -ms /bin/bash $USER_CI \
 RUN cd /home/$USER_CI/actions-runner \
   && echo "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz" \
   && curl -O -L "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz" \
-  && echo "b0a090336f0d0a439dac7505475a1fb822f61bbb36420c7b3b3fe6b1bdc4dbaa  actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz" | shasum -a 256 -c \
+  && echo "${RUNNER_SHA256}  actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz" | shasum -a 256 -c \
   && tar xzf ./actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz
 
-RUN /home/$USER_CI/actions-runner/bin/installdependencies.sh
+# RUN /home/$USER_CI/actions-runner/bin/installdependencies.sh
 
 COPY start.sh start.sh
 
