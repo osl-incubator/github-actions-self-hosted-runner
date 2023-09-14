@@ -2,6 +2,11 @@ FROM ubuntu:23.04
 
 # Prevents installdependencies.sh from prompting the user and blocking the image creation
 ARG DEBIAN_FRONTEND=noninteractive
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG NO_PROXY
+
+USER root
 
 RUN apt update -y \
   && apt upgrade -y \
@@ -37,33 +42,41 @@ RUN apt update -y \
     /var/cache/apt/archives \
     /tmp/*
 
-ENV RUNNER_VERSION=2.307.1
-ENV RUNNER_SHA256=038c9e98b3912c5fd6d0b277f2e4266b2a10accc1ff8ff981b9971a8e76b5441
 ENV USER_CI=ci
 
 RUN useradd -ms /bin/bash $USER_CI \
   && usermod -aG docker $USER_CI \
   && newgrp docker \
-  && mkdir -p /home/$USER_CI/actions-runner \
   && echo "$USER_CI ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USER_CI \
   && chmod 0440 /etc/sudoers.d/$USER_CI
 
-RUN cd /home/$USER_CI/actions-runner \
-  && echo "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz" \
-  && curl -O -L "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz" \
-  && echo "${RUNNER_SHA256}  actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz" | shasum -a 256 -c \
-  && tar xzf ./actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz
-
-# RUN /home/$USER_CI/actions-runner/bin/installdependencies.sh
-
-COPY start.sh start.sh
-
-# make the script executable
-RUN chmod +x start.sh
+# Using echo and tee to append the variables to /etc/environment
+RUN echo "http_proxy=\"$HTTP_PROXY\"" | tee -a /etc/environment && \
+    echo "https_proxy=\"$HTTPS_PROXY\"" | tee -a /etc/environment && \
+    echo "no_proxy=\"$NO_PROXY\"" | tee -a /etc/environment
 
 # since the config and run script for actions are not allowed to be run by root,
-# set the user to "docker" so all subsequent commands are run as the docker user
+# set the user to "docker" so all subsequent commands are executed as the docker user
 USER $USER_CI
+
+ENV RUNNER_VERSION=2.309.0
+ENV RUNNER_SHA256=2974243bab2a282349ac833475d241d5273605d3628f0685bd07fb5530f9bb1a
+ENV USER_CI=ci
+
+RUN mkdir -p ${HOME}/actions-runner \
+  && cd ${HOME}/actions-runner \
+  && export RUNNER_PKG="actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz" \
+  && export RUNNER_URL="https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/${RUNNER_PKG}" \
+  && curl -O -L "${RUNNER_URL}" \
+  && echo "${RUNNER_SHA256}  ${RUNNER_PKG}" | shasum -a 256 -c \
+  && tar xzf "./${RUNNER_PKG}"
+
+COPY start.sh start.sh
+RUN sudo chmod +x start.sh
+
+# COPY post-install.sh post-install.sh
+# RUN sudo chmod +x post-install.sh \
+#   && ./post-install.sh
 
 COPY --chown=$USER_CI:$USER_CI entrypoint.sh /tmp/entrypoint.sh
 

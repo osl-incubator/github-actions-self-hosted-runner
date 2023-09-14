@@ -15,6 +15,15 @@ Change the values in .env to the values you need for your docker-compose file.
 $ ./create-compose-file.sh
 ```
 
+Run `docker compose` with the .env you just created:
+
+```
+$ docker compose --env-file .env build
+```
+
+You can also use `make` to call the following targets: `build`, `start`, and `stop`.
+It will automatically run docker compose with the dotenv file and call its subcommand properly.
+
 In order to allow the Docker stack inside the GitHub Runner (that will be running as a Docker Contaienr), 
 we need to use it with sysbox.
 

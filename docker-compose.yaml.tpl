@@ -4,6 +4,11 @@ services:
     build:
       dockerfile: Dockerfile
       context: .
+      args:
+        HTTP_PROXY: "${HTTP_PROXY}"
+        HTTPS_PROXY: "${HTTPS_PROXY}"
+        NO_PROXY: "${NO_PROXY}"
+    runtime: sysbox-runc
     restart: always
     env_file: .env
     deploy:
