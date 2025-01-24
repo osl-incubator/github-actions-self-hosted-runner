@@ -1,4 +1,4 @@
-FROM ubuntu:23.04
+FROM ubuntu:24.04
 
 # Prevents installdependencies.sh from prompting the user and blocking the image creation
 ARG DEBIAN_FRONTEND=noninteractive
