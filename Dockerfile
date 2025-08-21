@@ -1,6 +1,5 @@
 FROM ubuntu:24.04
 
-# Prevents installdependencies.sh from prompting the user and blocking the image creation
 ARG DEBIAN_FRONTEND=noninteractive
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
@@ -11,6 +10,9 @@ USER root
 RUN apt update -y \
   && apt upgrade -y \
   && apt install -y --no-install-recommends \
+    libicu74 \
+    libkrb5-3 \
+    zlib1g \
     curl \
     jq \
     build-essential \
@@ -33,9 +35,7 @@ RUN apt update -y \
     tee /etc/apt/sources.list.d/docker.list > /dev/null \
   && apt-get update \
   && apt-get install -y \
-    docker-ce \
     docker-ce-cli \
-    containerd.io \
     docker-buildx-plugin \
     docker-compose-plugin \
   && rm -rf /var/lib/apt/lists/* \
@@ -44,19 +44,18 @@ RUN apt update -y \
 
 ENV USER_CI=ci
 
-RUN useradd -ms /bin/bash $USER_CI \
-  && usermod -aG docker $USER_CI \
-  && newgrp docker \
-  && echo "$USER_CI ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USER_CI \
-  && chmod 0440 /etc/sudoers.d/$USER_CI
+ARG DOCKER_GID=999
 
-# Using echo and tee to append the variables to /etc/environment
+RUN groupadd -g ${DOCKER_GID} docker || true \
+ && useradd -ms /bin/bash ${USER_CI} \
+ && usermod -aG docker ${USER_CI} \
+ && echo "${USER_CI} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${USER_CI} \
+ && chmod 0440 /etc/sudoers.d/${USER_CI}
+
 RUN echo "http_proxy=\"$HTTP_PROXY\"" | tee -a /etc/environment && \
     echo "https_proxy=\"$HTTPS_PROXY\"" | tee -a /etc/environment && \
     echo "no_proxy=\"$NO_PROXY\"" | tee -a /etc/environment
 
-# since the config and run script for actions are not allowed to be run by root,
-# set the user to "docker" so all subsequent commands are executed as the docker user
 USER $USER_CI
 
 ENV RUNNER_VERSION=2.309.0
@@ -73,10 +72,6 @@ RUN mkdir -p ${HOME}/actions-runner \
 
 COPY start.sh start.sh
 RUN sudo chmod +x start.sh
-
-# COPY post-install.sh post-install.sh
-# RUN sudo chmod +x post-install.sh \
-#   && ./post-install.sh
 
 COPY --chown=$USER_CI:$USER_CI entrypoint.sh /tmp/entrypoint.sh
 

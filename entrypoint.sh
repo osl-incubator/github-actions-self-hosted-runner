@@ -1,12 +1,20 @@
-#!/usr/bin/env bash
+#!/bin/bash
+set -euo pipefail
 
-sudo mkdir -p /var/log
-sudo chmod 777 /var/log
+# Optional: align docker GID if host differs (pass DOCKER_GID via env/compose)
+if [ -n "${DOCKER_GID:-}" ]; then
+  if getent group docker >/dev/null 2>&1; then
+    sudo groupmod -g "${DOCKER_GID}" docker || true
+  else
+    sudo groupadd -g "${DOCKER_GID}" docker || true
+  fi
+  sudo usermod -aG docker "${USER_CI:-ci}" || true
+fi
 
-sudo dockerd > /var/log/dockerd.log 2>&1 &
+# Make the socket group-writable
+if [ -S /var/run/docker.sock ]; then
+  sudo chmod g+rw /var/run/docker.sock || true
+fi
 
-sleep 1
+exec "$@"
 
-cat /var/log/dockerd.log
-
-$@
