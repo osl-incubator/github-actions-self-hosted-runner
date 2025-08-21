@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   runner:
-    user: "1001:1001"
+    user: "${HOST_UID}:${HOST_GID}"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     build:
@@ -11,10 +11,11 @@ services:
         HTTP_PROXY: ""
         HTTPS_PROXY: ""
         NO_PROXY: ""
+        DOCKER_GID: ${DOCKER_GID:-999}
     restart: always
     env_file: .env
     environment:
-      - DOCKER_GID=999
+      DOCKER_GID: ${DOCKER_GID}
     deploy:
       mode: replicated
       replicas: 4
